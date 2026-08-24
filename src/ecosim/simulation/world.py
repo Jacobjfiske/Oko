@@ -2,6 +2,7 @@ import random
 import math
 from .organism import Organism
 from .genome import Genome
+from ..config import WORLD_HEIGHT, WORLD_WIDTH, STARTING_ORGANISMS
 
 
 class World:
@@ -11,10 +12,10 @@ class World:
         self.food = []
         self.time = 0
 
-        for _ in range(100):
+        for _ in range(STARTING_ORGANISMS):
             organism = Organism(
-                x=random.uniform(0, 1200),
-                y=random.uniform(0, 800),
+                x=random.uniform(0, WORLD_WIDTH),
+                y=random.uniform(0, WORLD_HEIGHT),
                 genome=Genome.random()
             )
 
@@ -44,4 +45,10 @@ class World:
         pass
 
     def remove_dead(self):
-        pass
+        alive_organisms = []
+
+        for organism in self.organisms:
+            if organism.alive:
+                alive_organisms.append(organism)
+
+        self.organisms = alive_organisms

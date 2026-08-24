@@ -1,12 +1,13 @@
 import pygame
 
+from src.ecosim.config import WORLD_HEIGHT, WORLD_WIDTH
 from src.ecosim.simulation.world import World
 from src.ecosim.rendering.renderer import Renderer
 
 
 pygame.init()
 
-screen = pygame.display.set_mode((1200, 800))
+screen = pygame.display.set_mode((WORLD_WIDTH, WORLD_HEIGHT))
 clock = pygame.time.Clock()
 
 world = World()
