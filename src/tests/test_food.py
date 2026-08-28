@@ -10,10 +10,25 @@ class TestFood(unittest.TestCase):
         self.food = Food(x=100, y=200)
 
     def test_food_initialization(self):
-        self.assertEqual(self.food.x, 100)
-        self.assertEqual(self.food.y, 200)
+        self.assertEqual(
+            100,
+            self.food.x,
+            msg=f"Food x coordinate: expected 100, got {self.food.x}",
+        )
+        self.assertEqual(
+            200,
+            self.food.y,
+            msg=f"Food y coordinate: expected 200, got {self.food.y}",
+        )
 
-        self.assertEqual(self.food.energy, FOOD_ENERGY)
+        self.assertEqual(
+            FOOD_ENERGY,
+            self.food.energy,
+            msg=(
+                f"Food default energy: expected {FOOD_ENERGY}, "
+                f"got {self.food.energy}"
+            ),
+        )
 
 
 if __name__ == "__main__":

@@ -22,7 +22,13 @@ class TestOrganism(unittest.TestCase):
 
         organism.update(dt=1)
 
-        self.assertFalse(organism.alive)
+        self.assertFalse(
+            organism.alive,
+            msg=(
+                "Organism should be dead after its energy reaches zero, "
+                f"but alive was {organism.alive}"
+            ),
+        )
 
 
 if __name__ == "__main__":

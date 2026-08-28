@@ -2,7 +2,7 @@ import random
 import math
 from .organism import Organism
 from .genome import Genome
-from ..config import WORLD_HEIGHT, WORLD_WIDTH, STARTING_ORGANISMS, STARTING_FOOD
+from ..config import WORLD_HEIGHT, WORLD_WIDTH, STARTING_ORGANISMS, STARTING_FOOD, FOOD_COLLISION_DISTANCE
 from .food import Food
 
 
@@ -48,8 +48,27 @@ class World:
         for organism in self.organisms:
             organism.update(dt)
 
+    # Checks entire food against entire organisms. (later this will be changed with spatial grid)
     def handle_food(self):
-        pass
+        uneaten_food = []
+
+        for food_item in self.food:
+            closest_organism = None
+            closest_distance = float("inf")
+
+            for organism in self.organisms:
+                distance = math.hypot(organism.x - food_item.x, organism.y - food_item.y)
+
+                if distance <= closest_distance:
+                    closest_distance = distance
+                    closest_organism = organism
+
+            if closest_organism is not None and closest_distance <= FOOD_COLLISION_DISTANCE:
+                closest_organism.energy += food_item.energy
+            else:
+                uneaten_food.append(food_item)
+
+        self.food = uneaten_food
 
     def handle_reproductions(self):
         pass

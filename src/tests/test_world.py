@@ -1,4 +1,5 @@
 import unittest
+from cgitb import handler
 
 from src.ecosim.config import STARTING_FOOD, WORLD_WIDTH, WORLD_HEIGHT
 from src.ecosim.simulation.food import Food
@@ -21,7 +22,11 @@ class TestWorld(unittest.TestCase):
 
     def test_update_advances_time(self):
         self.world.update(1)
-        self.assertEqual(self.world.time, 1)
+        self.assertEqual(
+            1,
+            self.world.time,
+            msg=f"World time after a 1-second update: expected 1, got {self.world.time}",
+        )
 
     def test_update_removes_organism_when_energy_reaches_zero(self):
         organism = Organism(
@@ -34,7 +39,14 @@ class TestWorld(unittest.TestCase):
 
         self.world.organisms = [organism]
         self.world.update(dt=1)
-        self.assertEqual(len(self.world.organisms), 0)
+        self.assertEqual(
+            0,
+            len(self.world.organisms),
+            msg=(
+                "Organism reaching zero energy should be removed: "
+                f"expected 0 organisms, got {len(self.world.organisms)}"
+            ),
+        )
 
     def test_remove_dead(self):
         alive_organism = Organism(
@@ -53,19 +65,187 @@ class TestWorld(unittest.TestCase):
         self.world.organisms = [alive_organism, dead_organism]
         self.world.remove_dead()
 
-        self.assertEqual(len(self.world.organisms), 1)
-        self.assertIs(self.world.organisms[0], alive_organism)
+        self.assertEqual(
+            1,
+            len(self.world.organisms),
+            msg=(
+                "Removing dead organisms should leave one survivor: "
+                f"expected 1 organism, got {len(self.world.organisms)}"
+            ),
+        )
+        self.assertIs(
+            alive_organism,
+            self.world.organisms[0],
+            msg="The remaining organism should be the original living organism",
+        )
 
     def test_world_starts_with_config_food_amount(self):
-        self.assertEqual(len(self.world.food), STARTING_FOOD)
+        self.assertEqual(
+            STARTING_FOOD,
+            len(self.world.food),
+            msg=(
+                f"Starting food count: expected {STARTING_FOOD}, "
+                f"got {len(self.world.food)}"
+            ),
+        )
 
     def test_world_food_items(self):
         for food_item in self.world.food:
-            self.assertIsInstance(food_item, Food, "Is food")
-            self.assertLessEqual(food_item.x, WORLD_WIDTH, "In x upper bound")
-            self.assertGreaterEqual(food_item.x, 0, "In x lower bound")
-            self.assertLessEqual(food_item.y, WORLD_HEIGHT, "In y upper bound")
-            self.assertGreaterEqual(food_item.y, 0, "In y lower bound")
+            self.assertIsInstance(
+                food_item,
+                Food,
+                msg=f"World food item should be Food, got {type(food_item).__name__}",
+            )
+            self.assertLessEqual(
+                food_item.x,
+                WORLD_WIDTH,
+                msg=f"Food x={food_item.x} exceeds world width {WORLD_WIDTH}",
+            )
+            self.assertGreaterEqual(
+                food_item.x,
+                0,
+                msg=f"Food x={food_item.x} is below the lower bound 0",
+            )
+            self.assertLessEqual(
+                food_item.y,
+                WORLD_HEIGHT,
+                msg=f"Food y={food_item.y} exceeds world height {WORLD_HEIGHT}",
+            )
+            self.assertGreaterEqual(
+                food_item.y,
+                0,
+                msg=f"Food y={food_item.y} is below the lower bound 0",
+            )
+
+    def test_overlapping_food_increases_energy_and_is_removed(self):
+        organism = Organism(
+            x=100,
+            y=100,
+            genome=self.genome,
+            alive=True,
+        )
+        food_item = Food(
+            x=100,
+            y=100,
+        )
+        energy_after_consume = organism.energy + food_item.energy
+
+        self.world.organisms = [organism]
+        self.world.food = [food_item]
+
+        self.world.handle_food()
+
+        self.assertEqual(
+            energy_after_consume,
+            organism.energy,
+            msg=(
+                f"Overlapping food should increase organism energy: "
+                f"expected {energy_after_consume}, got {organism.energy}"
+            ),
+        )
+        self.assertEqual(
+            [],
+            self.world.food,
+            msg=f"Consumed food should be removed, got {self.world.food}",
+        )
+
+    def test_food_remains_no_energy_consumed(self):
+        organism = Organism(
+            x=200,
+            y=200,
+            genome=self.genome,
+            alive=True,
+        )
+        food_item = Food(
+            x=100,
+            y=100,
+        )
+
+        energy_after_consume = organism.energy + food_item.energy
+
+        self.world.organisms = [organism]
+        self.world.food = [food_item]
+
+        self.world.handle_food()
+
+        self.assertNotEqual(
+            energy_after_consume,
+            organism.energy,
+            msg="Distant food should not increase organism energy",
+        )
+        self.assertNotEqual(
+            [],
+            self.world.food,
+            msg="Distant food should remain in the world",
+        )
+
+    def test_food_remains_with_no_organisms(self):
+        self.world.organisms = []
+        self.world.handle_food()
+        self.assertNotEqual(
+            [],
+            self.world.food,
+            msg="Food should remain when the world has no organisms",
+        )
+
+    def test_uneaten_food_is_not_duplicated(self):
+        organism1 = Organism(
+            x=200,
+            y=200,
+            genome=self.genome,
+            alive=True,
+        )
+        organism2 = Organism(
+            x=300,
+            y=300,
+            genome=self.genome,
+            alive=True,
+        )
+        food_item = Food(
+            x=100,
+            y=100,
+        )
+
+        self.world.organisms = [organism1, organism2]
+        self.world.food = [food_item]
+
+        self.world.handle_food()
+
+        self.assertEqual(
+            [food_item],
+            self.world.food,
+            msg=(
+                "Uneaten food should remain exactly once: "
+                f"expected {[food_item]}, got {self.world.food}"
+            ),
+        )
+
+    def test_closest_organism_consumes_food(self):
+        energy_after_consume = 120
+
+        zero_index_organism = Organism(
+            x=105,
+            y=100,
+            genome=self.genome,
+            alive=True,
+        )
+        closest_organism = Organism(
+            x=100,
+            y=100,
+            genome=self.genome,
+            alive=True,
+        )
+        food_item = Food(
+            x=100,
+            y=100,
+        )
+
+        self.world.organisms = [zero_index_organism, closest_organism]
+        self.world.food = [food_item]
+
+        self.world.handle_food()
+
+        self.assertEqual(energy_after_consume, closest_organism.energy, "closest organism should consume food")
 
 
 if __name__ == "__main__":
