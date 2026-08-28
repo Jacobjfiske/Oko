@@ -2,7 +2,8 @@ import random
 import math
 from .organism import Organism
 from .genome import Genome
-from ..config import WORLD_HEIGHT, WORLD_WIDTH, STARTING_ORGANISMS
+from ..config import WORLD_HEIGHT, WORLD_WIDTH, STARTING_ORGANISMS, STARTING_FOOD
+from .food import Food
 
 
 class World:
@@ -12,6 +13,7 @@ class World:
         self.food = []
         self.time = 0
 
+        # Initialize organisms
         for _ in range(STARTING_ORGANISMS):
             organism = Organism(
                 x=random.uniform(0, WORLD_WIDTH),
@@ -25,6 +27,14 @@ class World:
             organism.vy = math.sin(angle) * 50 * organism.genome.speed
 
             self.organisms.append(organism)
+
+        # Initialize food
+        for _ in range(STARTING_FOOD):
+            food_item = Food(
+                x=random.uniform(0, WORLD_WIDTH),
+                y=random.uniform(0, WORLD_HEIGHT),
+            )
+            self.food.append(food_item)
 
     def update(self, dt):
         self.time += dt
