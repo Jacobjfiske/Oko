@@ -4,12 +4,14 @@ from .organism import Organism
 from .genome import Genome
 from ..config import WORLD_HEIGHT, WORLD_WIDTH, STARTING_ORGANISMS, STARTING_FOOD, FOOD_COLLISION_DISTANCE
 from .food import Food
+from .corpse import Corpse
 
 
 class World:
 
     def __init__(self):
         self.organisms = []
+        self.corpses = []
         self.food = []
         self.time = 0
 
@@ -79,5 +81,7 @@ class World:
         for organism in self.organisms:
             if organism.alive:
                 alive_organisms.append(organism)
+            else:
+                self.corpses.append(Corpse(x=organism.x, y=organism.y))
 
         self.organisms = alive_organisms

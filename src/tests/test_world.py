@@ -1,5 +1,4 @@
 import unittest
-from cgitb import handler
 
 from src.ecosim.config import STARTING_FOOD, WORLD_WIDTH, WORLD_HEIGHT
 from src.ecosim.simulation.food import Food
@@ -246,6 +245,22 @@ class TestWorld(unittest.TestCase):
         self.world.handle_food()
 
         self.assertEqual(energy_after_consume, closest_organism.energy, "closest organism should consume food")
+
+    def test_remove_dead_creates_corpse_at_organism_position(self):
+        dead_organism = Organism(
+            x=30,
+            y=50,
+            genome=self.genome,
+            alive=False,
+        )
+        self.world.organisms = [dead_organism]
+        self.world.food = []
+
+        self.world.remove_dead()
+
+        self.assertEqual([], self.world.organisms, "Organisms should be empty")
+        self.assertEqual(dead_organism.x, self.world.corpses[0].x, "Corpse should be at the same coordinate position of the removed dead organism")
+        self.assertEqual(dead_organism.y, self.world.corpses[0].y, "Corpse should be at the same coordinate position of the removed dead organism")
 
 
 if __name__ == "__main__":
