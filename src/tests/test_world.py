@@ -259,8 +259,11 @@ class TestWorld(unittest.TestCase):
         self.world.remove_dead()
 
         self.assertEqual([], self.world.organisms, "Organisms should be empty")
-        self.assertEqual(dead_organism.x, self.world.corpses[0].x, "Corpse should be at the same coordinate position of the removed dead organism")
-        self.assertEqual(dead_organism.y, self.world.corpses[0].y, "Corpse should be at the same coordinate position of the removed dead organism")
+        self.assertEqual(dead_organism.x, self.world.corpses[0].x,
+                         "Corpse should be at the same coordinate position of the removed dead organism")
+        self.assertEqual(dead_organism.y, self.world.corpses[0].y,
+                         "Corpse should be at the same coordinate position of the removed dead organism")
+        self.assertEqual(dead_organism.genome.size, self.world.corpses[0].genome.size, "Corpse should be the same size as the organism")
 
 
 if __name__ == "__main__":

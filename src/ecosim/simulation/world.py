@@ -82,6 +82,6 @@ class World:
             if organism.alive:
                 alive_organisms.append(organism)
             else:
-                self.corpses.append(Corpse(x=organism.x, y=organism.y))
+                self.corpses.append(Corpse(x=organism.x, y=organism.y, genome=organism.genome))
 
         self.organisms = alive_organisms
