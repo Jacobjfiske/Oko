@@ -7,3 +7,7 @@ class Corpse:
     x: float
     y: float
     genome: Genome
+    age: float = 0
+
+    def update(self, dt):
+        self.age += dt

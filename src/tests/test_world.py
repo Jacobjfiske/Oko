@@ -1,6 +1,7 @@
 import unittest
 
-from src.ecosim.config import STARTING_FOOD, WORLD_WIDTH, WORLD_HEIGHT
+from src.ecosim.config import STARTING_FOOD, WORLD_WIDTH, WORLD_HEIGHT, CORPSE_REMOVAL_DT
+from src.ecosim.simulation.corpse import Corpse
 from src.ecosim.simulation.food import Food
 from src.ecosim.simulation.genome import Genome
 from src.ecosim.simulation.organism import Organism
@@ -47,7 +48,7 @@ class TestWorld(unittest.TestCase):
             ),
         )
 
-    def test_remove_dead(self):
+    def test_remove_dead_organisms(self):
         alive_organism = Organism(
             x=100,
             y=100,
@@ -62,7 +63,7 @@ class TestWorld(unittest.TestCase):
         )
 
         self.world.organisms = [alive_organism, dead_organism]
-        self.world.remove_dead()
+        self.world.remove_dead_organisms()
 
         self.assertEqual(
             1,
@@ -256,14 +257,25 @@ class TestWorld(unittest.TestCase):
         self.world.organisms = [dead_organism]
         self.world.food = []
 
-        self.world.remove_dead()
+        self.world.remove_dead_organisms()
 
-        self.assertEqual([], self.world.organisms, "Organisms should be empty")
+        self.assertEqual([], self.world.organisms, "Organism should be removed")
         self.assertEqual(dead_organism.x, self.world.corpses[0].x,
                          "Corpse should be at the same coordinate position of the removed dead organism")
         self.assertEqual(dead_organism.y, self.world.corpses[0].y,
                          "Corpse should be at the same coordinate position of the removed dead organism")
-        self.assertEqual(dead_organism.genome.size, self.world.corpses[0].genome.size, "Corpse should be the same size as the organism")
+        self.assertEqual(dead_organism.genome.size, self.world.corpses[0].genome.size,
+                         "Corpse should be the same size as the organism")
+
+    def test_corpse_age_progresses_and_removes_with_time(self):
+        dt = 15
+
+        self.world.corpses = [Corpse(100, 100, self.genome)]
+
+        self.world.update(dt)
+        self.assertEqual(dt, self.world.corpses[0].age, "Age should progress on update")
+        self.world.update(CORPSE_REMOVAL_DT)
+        self.assertEqual([], self.world.corpses, "Corpses should be removed")
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ class Renderer:
             pygame.draw.polygon(
                 self.screen,
                 (255, 0, 0),
-                self._calculate_diamond_points(corpse.x, corpse.y,4),
+                self._calculate_diamond_points(corpse.x, corpse.y, 4),
                 0)
 
         for organism in world.organisms:
